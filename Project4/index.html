@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+<style>
+circle{stroke-width: 1.5px;}
+line{stroke: #999;}
+.d3-tip{
+line-height: 1;
+color: black;
+}
+</style>
+<title>Project 4</title>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+</head>
+
+<body>
+<input type="text" id="filename">
+<button onclick="loadJSON();">Load JSON</button>
+LinkStrength: <input type="range" id="ls" min="0" max="1" step="0.1" onchange="change()">
+Friction: <input type="range" id="f" min="0" max="1" step="0.1" onchange="change()">
+<script>
+var width = 500;
+var height = 500;
+var r = 6;
+	
+var fill = d3.scale.category20();
+	
+var force = d3.layout.force()
+	.charge(-120)
+	.linkDistance(30)
+	.size([width, height]);
+
+function loadJSON(){
+		
+var svg = d3.select("body").append("svg")
+	.attr("width", width)
+	.attr("height", height)
+
+var tip = d3.tip()
+	.attr('class', 'd3-tip')
+	.offset([-10, 0])
+	.html(function(d){
+	return d.name + "</span>"
+	})
+	svg.call(tip);
+	
+var file = document.getElementById('filename').value;
+		
+d3.json(file, function (json) {
+	var link = svg.selectAll("line")
+		.data(json.links)
+        .enter().append("svg:line");
+
+	var node = svg.selectAll("circle")
+		.data(json.nodes)
+        .enter().append("svg:circle")
+			.attr("r", r - .75)
+            .style("fill", function (d) { return fill(d.group); })
+            .style("stroke", function (d) { return d3.rgb(fill(d.group)).darker(); })
+            .call(force.drag)
+			.on('mouseover', tip.show)
+			.on('mouseout', tip.hide);
+
+			force
+				.nodes(json.nodes)
+                .links(json.links)
+                .on("tick", tick)
+                .start();
+
+            function tick(e) {
+                // Push sources up and targets down to form a weak tree.
+                var k = 6 * e.alpha; // Create the easing animation effect
+                json.links.forEach(function (d, i) {
+                    d.source.y -= k;
+                    d.target.y += k;
+                });
+
+                node.attr("cx", function (d) { return d.x })
+                    .attr("cy", function (d) { return d.y; });
+
+                link.attr("x1", function (d) { return d.source.x; })
+                    .attr("y1", function (d) { return d.source.y; })
+                    .attr("x2", function (d) { return d.target.x; })
+                    .attr("y2", function (d) { return d.target.y; });
+            }
+        });  
+} // loadJSON	
+
+function change(){
+	var ls = document.getElementById("ls").value;
+	var f = document.getElementById("f").value;
+	force.stop();
+	force.linkStrength(ls);
+	force.friction(f);
+	force.start();
+
+}
+
+</script>
+</body>
+</html>
