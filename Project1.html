@@ -1,0 +1,115 @@
+<html>
+<head>
+	<!--Load the AJAX API-->
+	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+	<script type="text/javascript">
+	
+		google.load('visualization', '1.0', { 'packages' : ['controls']});
+		google.setOnLoadCallback(queryData);
+		
+		function queryData(){
+			var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1yxuh-ZSgdX9zNCiMGdug1otxxpgD0pNwD6oVWNWjJVo/gviz/tq?tq=');
+			query.send(handleQueryResponse);
+		}
+		
+		function handleQueryResponse(response){
+			if (response.isError()){
+				alert('Error in query: ' + response.getMessage() + '' + response.getDetailed());
+				return;
+			}
+			var dataTable = response.getDataTable();
+			
+			var tableChart = new google.visualization.ChartWrapper({
+				'chartType': 'Table',
+				'containerId': 'tableChart'
+				
+			});
+			
+			var columnChart = new google.visualization.ChartWrapper({
+				'chartType': 'ColumnChart',
+				'containerId': 'bar_chart_div',
+				'view': { 'columns': [2, 1, 0]}
+			});
+			
+			var scatterChart = new google.visualization.ChartWrapper({
+				'chartType': 'ScatterChart',
+				'containerId': 'scat_chart_div',
+				'view': { 'columns': [0, 1]},
+				'options': {
+					hAxis: {title: 'Price'},
+					vAxis: {title: 'Mileage'}
+				}
+			});
+			
+			var priceFilter = new google.visualization.ControlWrapper({
+				'width': 1600,
+				'height': 1200,
+				'controlType' : 'NumberRangeFilter',
+				'containerId' : 'price_filter_div',
+				'options' : {
+					'filterColumnLabel': 'Price'
+				}
+			});
+			
+			var mileageFilter = new google.visualization.ControlWrapper({
+				'width': 1600,
+				'height': 1200,
+				'controlType' : 'NumberRangeFilter',
+				'containerId' : 'mileage_filter_div',
+				'options' : {
+					'filterColumnLabel': 'Mileage'
+				}
+			});
+			
+			var modelFilter = new google.visualization.ControlWrapper({
+				'width': 1600,
+				'height': 1200,
+				'controlType': 'CategoryFilter',
+				'containerId': 'model_filter_div',
+				'options': {
+					'filterColumnLabel': 'Model',
+					'ui': {
+						'labelStacking': 'vertical',
+						'allowTyping': false,
+						'allowMultiple': true,
+					}
+				}
+			});
+			
+			var dashboard = new google.visualization.Dashboard(document.getElementById('dashboard_div'));
+			
+			dashboard.bind([priceFilter, mileageFilter, modelFilter],
+			[tableChart, columnChart, scatterChart]);
+			
+			dashboard.draw(dataTable);
+		}
+	</script>
+</head>
+<body>
+	<h2>Used Car Data Visualization</h2>
+	<div id="dashboard_div">
+		<table>
+			<tr>
+				<td>
+					<div id="price_filter_div" style="">
+					</div>
+					<br />
+					<div id="mileage_filter_div" style="">
+					</div>
+					<br />
+					<div id="model_filter_div" style="">
+					</div>
+				</td>
+				<td>
+					<div id="tableChart" style="height: 200px; width: 800px; border-style: groove;">
+					</div>
+					<div id="bar_chart_div" style="height: 200px; width: 800px; border-style: groove;">
+					</div>
+					<div id="scat_chart_div" style="height: 200px; width: 800px; border-style: groove;">
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
